@@ -1,0 +1,44 @@
+# the browser sandbox: a real Chromium, driven by agent-browser (github.com/vercel-labs/agent-browser), a command-line
+# program made for AI agents. the agent uses it through the `browser` tool (tools/sandbox/browser.py), which runs
+# `agent-browser <command>` in here. headless: there is no screen, nobody watches.
+# Debian, because its chromium works on x86 and ARM alike. the first build downloads about 600 MB.
+FROM docker.io/library/debian:trixie-slim
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8
+
+# chromium            the browser
+# fonts-*             so pages (and screenshots, pdfs) don't show empty boxes
+# nodejs, npm         to install agent-browser
+# python3             to work with what was downloaded, without switching sandboxes (that would close the browser)
+# poppler-utils       pdftotext: pdfs to text
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        chromium \
+        fonts-liberation fonts-noto-core fonts-noto-color-emoji \
+        nodejs npm \
+        python3 \
+        poppler-utils \
+        ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# agent-browser, a fixed version: change the number here to update it, the next start rebuilds the image.
+# the last line runs it once, so a broken install fails the build and not the agent's first call
+RUN npm install --prefix /opt/agent-browser agent-browser@0.39.4 \
+    && npm cache clean --force \
+    && ln -s /opt/agent-browser/node_modules/.bin/agent-browser /usr/local/bin/agent-browser \
+    && agent-browser --help > /dev/null
+
+# how agent-browser starts the browser, for every call in this sandbox:
+#   EXECUTABLE_PATH   the chromium installed above, instead of downloading another one
+#   ARGS              --no-sandbox: chromium's own sandbox can't work as root in a container. the container is the sandbox
+#   IDLE_TIMEOUT_MS   0 = the browser never closes by itself: `close` does, or the sandbox stopping
+#   DOWNLOAD_PATH     where downloads land. not kept: the agent moves what matters into /workspace
+#   NO_COLOR          plain text answers, no colour codes
+ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium \
+    AGENT_BROWSER_ARGS=--no-sandbox \
+    AGENT_BROWSER_IDLE_TIMEOUT_MS=0 \
+    AGENT_BROWSER_DOWNLOAD_PATH=/root/downloads \
+    NO_COLOR=1
+RUN mkdir -p /root/downloads
+
+WORKDIR /workspace
