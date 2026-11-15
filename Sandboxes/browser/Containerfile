@@ -5,7 +5,8 @@
 FROM docker.io/library/debian:trixie-slim
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    LANG=C.UTF-8
+    LANG=C.UTF-8 \
+    TZ=Europe/Rome
 
 # chromium            the browser
 # fonts-*             so pages (and screenshots, pdfs) don't show empty boxes
@@ -40,5 +41,13 @@ ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium \
     AGENT_BROWSER_DOWNLOAD_PATH=/root/downloads \
     NO_COLOR=1
 RUN mkdir -p /root/downloads
+
+# the fingerprint: every page must see a normal desktop chrome on windows, not headless chromium on linux.
+#   fingerprint.js     runs before any page script, in every frame. it patches what the User-Agent cannot reach:
+#                      navigator.platform, navigator.webdriver, userAgentData, window.chrome, WebGL, screen size
+#   agent-browser.json the config agent-browser reads on every launch: the User-Agent, the headers, and the
+#                      init script above. it is re-read on every launch, so a restart is enough to pick up edits
+COPY fingerprint.js /opt/fingerprint/fingerprint.js
+COPY agent-browser.json /root/.agent-browser/config.json
 
 WORKDIR /workspace
