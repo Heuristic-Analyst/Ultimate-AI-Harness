@@ -1,5 +1,7 @@
 # AI Harness as a server, from scratch
 
+**SIDENOTE:** Add the Projects folder in Shared Folder or wherever, but make sure its where the path in settings/folders.json points to! Without the (at the beginning empty) folder projects cannot be done in the pointed directory.
+
 A small AI assistant, built step by step so that every line is understood. It builds on the [Basic AI Harness](https://github.com/Heuristic-Analyst/Basic-AI-Harness): the same agent, tools, skills, conversations and checkpoints, but now it runs as a **server**, and everything you chat with is a **client** of it: a terminal (`main.py`), a window (`gui.py`), or anything you build yourself. Several conversations can work at the same time.
 
 It talks to any model through [LiteLLM](https://github.com/BerriAI/litellm), can use tools, loads skills when it needs them, saves every conversation, and keeps working when a conversation gets too long for the model.
