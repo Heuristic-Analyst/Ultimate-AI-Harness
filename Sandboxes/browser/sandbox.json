@@ -1,5 +1,5 @@
 {
   "_about": "settings of the browser sandbox. a browser needs more memory than the default 2g. network: websites need it. false = off until you type /sandbox net on. true = on whenever the agent opens this sandbox, so you don't have to (then the agent can reach the internet whenever it chooses this sandbox)",
   "memory": "4g",
-  "network": false
+  "network": true
 }
